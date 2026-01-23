@@ -1,0 +1,408 @@
+{% extends 'rickmorty_app/base.html' %}
+
+{% block title %}{% if is_edit %}Editar{% else %}Crear{% endif %} Personaje - Rick and Morty{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==================== FORMULARIO ==================== */
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .form-title {
+        font-size: 2.2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        color: var(--gray-text);
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--light-text);
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    .form-label-required::after {
+        content: " *";
+        color: var(--danger);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 0.9rem;
+        border: 2px solid var(--hover-bg);
+        border-radius: 10px;
+        background-color: var(--darker-bg);
+        color: var(--light-text);
+        font-size: 1rem;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 181, 204, 0.1);
+    }
+
+    .form-select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300b5cc' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 3rem;
+    }
+
+    .form-select[multiple] {
+        height: 200px;
+        background-image: none;
+        padding-right: 0.9rem;
+    }
+
+    .form-input[type="file"] {
+        padding: 0.6rem;
+    }
+
+    .form-help {
+        font-size: 0.85rem;
+        color: var(--gray-text);
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    /* ==================== PREVIEW DE IMAGEN ==================== */
+    .image-preview-container {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .image-preview {
+        max-width: 250px;
+        max-height: 250px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 181, 204, 0.3);
+        margin: 0 auto;
+        display: block;
+    }
+
+    .current-image-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--gray-text);
+        font-size: 0.9rem;
+    }
+
+    /* ==================== BOTONES ==================== */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--hover-bg);
+    }
+
+    .form-actions button,
+    .form-actions a {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-submit {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 181, 204, 0.4);
+    }
+
+    .btn-cancel {
+        background-color: var(--hover-bg);
+        color: var(--light-text);
+    }
+
+    .btn-cancel:hover {
+        background-color: var(--card-bg);
+    }
+
+    /* ==================== MULTI-SELECT ==================== */
+    .multi-select-help {
+        background: var(--darker-bg);
+        padding: 0.8rem;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--gray-text);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    /* ==================== VALIDACIÓN ==================== */
+    .form-error {
+        color: var(--danger);
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    .form-input.error,
+    .form-select.error {
+        border-color: var(--danger);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 1.5rem;
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Botón volver -->
+    <a href="{% url 'index' %}" class="btn btn-secondary mb-3" style="display: inline-block;">
+        Volver a la lista
+    </a>
+
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">
+                {% if is_edit %}
+                    Editar Personaje
+                {% else %}
+                    Crear Personaje
+                {% endif %}
+            </h1>
+            <p class="form-subtitle">
+                {% if is_edit %}
+                    Modifica la información de {{ character.name }}
+                {% else %}
+                    Completa el formulario para agregar un nuevo personaje
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="characterForm">
+            {% csrf_token %}
+
+            <!-- NOMBRE -->
+            <div class="form-group">
+                <label for="name" class="form-label form-label-required">Nombre</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-input"
+                    value="{% if is_edit %}{{ character.name }}{% endif %}"
+                    required
+                    placeholder="Ej: Rick Sanchez"
+                >
+                <span class="form-help">Nombre completo del personaje</span>
+            </div>
+
+            <!-- IMAGEN -->
+            <div class="form-group">
+                <label for="image" class="form-label">Imagen</label>
+                
+                {% if is_edit and character.image %}
+                <div class="image-preview-container">
+                    <span class="current-image-label">Imagen actual:</span>
+                    <img src="{{ character.image.url }}" alt="{{ character.name }}" class="image-preview" id="currentImage">
+                </div>
+                {% endif %}
+                
+                <input 
+                    type="file" 
+                    id="image" 
+                    name="image" 
+                    class="form-input"
+                    accept="image/*"
+                    onchange="previewImage(event)"
+                >
+                <span class="form-help">
+                    {% if is_edit %}
+                        Deja vacío si no deseas cambiar la imagen
+                    {% else %}
+                        Formatos aceptados: JPG, PNG, GIF (máx. 5MB)
+                    {% endif %}
+                </span>
+                
+                <div class="image-preview-container" id="newImagePreview" style="display: none;">
+                    <span class="current-image-label">Nueva imagen:</span>
+                    <img src="" alt="Preview" class="image-preview" id="imagePreview">
+                </div>
+            </div>
+
+            <!-- UBICACIÓN -->
+            <div class="form-group">
+                <label for="location" class="form-label">Ubicación</label>
+                <select id="location" name="location" class="form-select">
+                    <option value="">-- Sin ubicación --</option>
+                    {% for location in locations %}
+                    <option value="{{ location.id }}" 
+                        {% if is_edit and character.location.id == location.id %}selected{% endif %}>
+                        {{ location.name }}{% if location.dimension %} ({{ location.dimension }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <span class="form-help">Última ubicación conocida del personaje</span>
+            </div>
+
+            <!-- EPISODIOS -->
+            <div class="form-group">
+                <label for="episodes" class="form-label">Episodios</label>
+                <select id="episodes" name="episodes" class="form-select" multiple>
+                    {% for episode in episodes %}
+                    <option value="{{ episode.id }}"
+                        {% if is_edit and episode in character.episode.all %}selected{% endif %}>
+                        {{ episode.name }} - {{ episode.air_date }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="multi-select-help">
+                    <strong>Tip:</strong> Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples episodios
+                </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if is_edit %}
+                        Guardar Cambios
+                    {% else %}
+                        Crear Personaje
+                    {% endif %}
+                </button>
+                <a href="{% if is_edit %}{% url 'character_detail' character.pk %}{% else %}{% url 'index' %}{% endif %}" class="btn-cancel">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preview de imagen antes de subir
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // Validar tamaño (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('La imagen es muy grande. El tamaño máximo es 5MB.');
+                event.target.value = '';
+                return;
+            }
+
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona un archivo de imagen válido.');
+                event.target.value = '';
+                return;
+            }
+
+            // Mostrar preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('newImagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Validación del formulario
+    document.getElementById('characterForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        
+        if (!name) {
+            e.preventDefault();
+            alert('Por favor ingresa el nombre del personaje.');
+            document.getElementById('name').focus();
+            return false;
+        }
+
+        // Confirmar envío
+        const action = "{{ is_edit|yesno:'actualizar,crear' }}";
+        const confirmed = confirm(`¿Estás seguro de que deseas ${action} este personaje?`);
+        
+        if (!confirmed) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Mostrar indicador de carga
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<span class="loading"></span> Guardando';
+        submitBtn.disabled = true;
+    });
+
+    // Mejorar la experiencia del multi-select
+    const episodesSelect = document.getElementById('episodes');
+    let lastSelected = null;
+
+    episodesSelect.addEventListener('mousedown', function(e) {
+        if (e.shiftKey && lastSelected !== null) {
+            const options = Array.from(this.options);
+            const start = options.indexOf(lastSelected);
+            const end = options.indexOf(e.target);
+            const [min, max] = [Math.min(start, end), Math.max(start, end)];
+            
+            for (let i = min; i <= max; i++) {
+                options[i].selected = true;
+            }
+            e.preventDefault();
+        }
+        lastSelected = e.target;
+    });
+</script>
+{% endblock %}

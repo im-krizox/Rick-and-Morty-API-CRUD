@@ -1,0 +1,285 @@
+{% extends 'rickmorty_app/base.html' %}
+
+{% block title %}{{ character.name }} - Rick and Morty{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==================== DETALLE DE PERSONAJE ==================== */
+    .detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .detail-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .detail-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .detail-header h1 {
+        font-size: 2.5rem;
+        margin: 0;
+        color: var(--darker-bg);
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .detail-content {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 2rem;
+        padding: 2rem;
+    }
+
+    .detail-image-section {
+        text-align: center;
+    }
+
+    .detail-image {
+        width: 100%;
+        max-width: 350px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0, 181, 204, 0.3);
+        transition: transform 0.3s;
+    }
+
+    .detail-image:hover {
+        transform: scale(1.05);
+    }
+
+    .detail-info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .info-group {
+        background: var(--darker-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .info-label {
+        color: var(--gray-text);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-value {
+        color: var(--light-text);
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    /* ==================== EPISODIOS ==================== */
+    .episodes-section {
+        padding: 0 2rem 2rem 2rem;
+    }
+
+    .episodes-title {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .episodes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .episode-card {
+        background: var(--darker-bg);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 3px solid var(--secondary-color);
+        transition: all 0.3s;
+    }
+
+    .episode-card:hover {
+        transform: translateX(5px);
+        background: var(--hover-bg);
+    }
+
+    .episode-name {
+        font-weight: bold;
+        color: var(--light-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .episode-date {
+        color: var(--gray-text);
+        font-size: 0.9rem;
+    }
+
+    /* ==================== ACCIONES ==================== */
+    .detail-actions {
+        padding: 0 2rem 2rem 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .detail-actions a,
+    .detail-actions button {
+        flex: 1;
+        min-width: 150px;
+        padding: 1rem;
+        text-align: center;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .detail-content {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-header h1 {
+            font-size: 2rem;
+        }
+
+        .episodes-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-actions {
+            flex-direction: column;
+        }
+
+        .detail-actions a,
+        .detail-actions button {
+            min-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <!-- Botón volver -->
+    <a href="{% url 'index' %}" class="btn btn-secondary mb-3" style="display: inline-block;">
+        ← Volver a la lista
+    </a>
+
+    <div class="detail-card">
+        <!-- HEADER -->
+        <div class="detail-header">
+            <h1>{{ character.name }}</h1>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="detail-content">
+            <!-- IMAGEN -->
+            <div class="detail-image-section">
+                {% if character.image %}
+                    <img src="{{ character.image.url }}" alt="{{ character.name }}" class="detail-image">
+                {% else %}
+                    <img src="https://via.placeholder.com/350x350/2a2a3e/00b5cc?text={{ character.name|first }}" alt="{{ character.name }}" class="detail-image">
+                {% endif %}
+            </div>
+
+            <!-- INFORMACIÓN -->
+            <div class="detail-info-section">
+                <div class="info-group">
+                    <div class="info-label">
+                        <span>Ubicación</span>
+                    </div>
+                    <div class="info-value">
+                        {% if character.location %}
+                            {{ character.location.name }}
+                            {% if character.location.dimension %}
+                                <br>
+                                <span style="font-size: 0.9rem; color: var(--gray-text);">
+                                    {{ character.location.dimension }}
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            Desconocida
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <span>Apariciones</span>
+                    </div>
+                    <div class="info-value">
+                        {{ character.episode_count }} episodio{{ character.episode_count|pluralize }}
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <span>ID del Sistema</span>
+                    </div>
+                    <div class="info-value">
+                        #{{ character.id }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EPISODIOS -->
+        {% if character.episode.all %}
+        <div class="episodes-section">
+            <h2 class="episodes-title">
+                <span>Episodios</span>
+            </h2>
+            <div class="episodes-grid">
+                {% for episode in character.episode.all %}
+                <div class="episode-card">
+                    <div class="episode-name">{{ episode.name }}</div>
+                    <div class="episode-date">{{ episode.air_date }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ACCIONES -->
+        <div class="detail-actions">
+            <a href="{% url 'character_edit' character.pk %}" class="btn-edit">
+                Editar Personaje
+            </a>
+            <button onclick="confirmDelete()" class="btn-delete">
+                Eliminar Personaje
+            </button>
+            <a href="{% url 'index' %}" class="btn-secondary">
+                Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete() {
+        if (confirm('¿Estás seguro de que deseas eliminar a "{{ character.name|escapejs }}"?\n\nEsta acción no se puede deshacer.')) {
+            window.location.href = "{% url 'character_delete' character.pk %}";
+        }
+    }
+</script>
+{% endblock %}

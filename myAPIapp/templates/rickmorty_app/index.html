@@ -1,0 +1,409 @@
+{% extends 'rickmorty_app/base.html' %}
+
+{% block title %}Personajes - Rick and Morty{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==================== PÁGINA PRINCIPAL ==================== */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: var(--gray-text);
+        font-size: 1.1rem;
+    }
+
+    /* ==================== BOTÓN INICIALIZAR ==================== */
+    .initialize-section {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .btn-initialize {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 4px 20px rgba(0, 181, 204, 0.4);
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-initialize:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 30px rgba(0, 181, 204, 0.6);
+    }
+
+    .btn-initialize:active {
+        transform: translateY(0);
+    }
+
+    /* ==================== GRID DE PERSONAJES ==================== */
+    .characters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .character-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .character-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 30px rgba(0, 181, 204, 0.4);
+    }
+
+    .character-image-container {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+
+    .character-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .character-card:hover .character-image {
+        transform: scale(1.1);
+    }
+
+    .character-info {
+        padding: 1.5rem;
+    }
+
+    .character-name {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 0.8rem;
+        color: var(--light-text);
+    }
+
+    .character-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--gray-text);
+        font-size: 0.95rem;
+    }
+
+    .character-detail-icon {
+        color: var(--primary-color);
+    }
+
+    /* Placeholder para imágenes sin cargar */
+    .placeholder-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%);
+        font-size: 4rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .character-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .character-actions a,
+    .character-actions button {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-view {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-view:hover {
+        background-color: #009bb3;
+    }
+
+    .btn-edit {
+        background-color: var(--warning);
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background-color: #e68900;
+    }
+
+    .btn-delete {
+        background-color: var(--danger);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-delete:hover {
+        background-color: #da190b;
+    }
+
+    /* ==================== EMPTY STATE ==================== */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border-radius: 16px;
+        margin-top: 2rem;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        color: var(--light-text);
+    }
+
+    .empty-state-text {
+        color: var(--gray-text);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    /* ==================== LOADING ANIMATION ==================== */
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .characters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .character-actions {
+            flex-direction: column;
+        }
+
+        .btn-initialize {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HEADER DE PÁGINA -->
+<div class="page-header">
+    <h1 class="page-title">Portal de Personajes</h1>
+    <p class="page-subtitle">Explora el multiverso de Rick and Morty</p>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="stats-bar">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_characters }}</div>
+        <div class="stat-label">Personajes</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_locations }}</div>
+        <div class="stat-label">Ubicaciones</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_episodes }}</div>
+        <div class="stat-label">Episodios</div>
+    </div>
+</div>
+
+<!-- BOTÓN INICIALIZAR BASE DE DATOS -->
+<div class="initialize-section">
+    <form method="post" action="{% url 'initialize_database' %}" id="initializeForm">
+        {% csrf_token %}
+        <button type="submit" class="btn-initialize" id="initBtn">
+            Inicializar Base de Datos
+        </button>
+    </form>
+    <p style="color: var(--gray-text); margin-top: 1rem; font-size: 0.9rem;">
+        Este proceso puede tardar unos minutos. Solo hazlo si la base de datos está vacía.
+    </p>
+</div>
+
+<!-- GRID DE PERSONAJES -->
+{% if characters %}
+<div class="characters-grid">
+    {% for character in characters %}
+    <div class="character-card">
+        <div class="character-image-container">
+            {% if character.image %}
+                <img src="{{ character.image.url }}" alt="{{ character.name }}" class="character-image">
+            {% else %}
+                <div class="placeholder-image" aria-label="{{ character.name }}">{{ character.name|first|upper }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="character-info">
+            <h2 class="character-name">{{ character.name }}</h2>
+            
+            <div class="character-detail">
+                <span class="character-detail-icon">Ubicación</span>
+                <span>{% if character.location %}{{ character.location.name }}{% else %}Ubicación desconocida{% endif %}</span>
+            </div>
+            
+            {% with ep_count=character.episode_count %}
+            <div class="character-detail">
+                <span class="character-detail-icon">Episodios</span>
+                <span>{{ ep_count }} episodio{{ ep_count|pluralize }}</span>
+            </div>
+            {% endwith %}
+            
+            <div class="character-actions">
+                <a href="{% url 'character_detail' character.pk %}" class="btn-view">Ver</a>
+                <a href="{% url 'character_edit' character.pk %}" class="btn-edit">Editar</a>
+                <button onclick="confirmDelete({{ character.pk }}, '{{ character.name|escapejs }}')" class="btn-delete">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- ESTADO VACÍO -->
+<div class="empty-state">
+    <div class="empty-state-icon"></div>
+    <h2 class="empty-state-title">No hay personajes en la base de datos</h2>
+    <p class="empty-state-text">
+        Haz clic en el botón "Inicializar Base de Datos" para cargar los personajes desde la API<br>
+        o crea uno nuevo manualmente.
+    </p>
+    <a href="{% url 'character_create' %}" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1.1rem;">
+        Crear Primer Personaje
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mapa de URLs para eliminar personajes (generado por Django)
+    const deleteUrls = {
+        {% for character in characters %}
+        {{ character.pk }}: "{% url 'character_delete' character.pk %}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // Confirmación antes de eliminar
+    function confirmDelete(characterId, characterName) {
+        if (confirm(`¿Estás seguro de que deseas eliminar a "${characterName}"?\n\nEsta acción no se puede deshacer.`)) {
+            // Crear un formulario temporal para enviar la petición DELETE
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = deleteUrls[characterId];
+            
+            // Agregar CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Confirmación antes de inicializar
+    document.getElementById('initializeForm').addEventListener('submit', function(e) {
+        const confirmed = confirm(
+            'ATENCIÓN\n\n' +
+            'Esto descargará más de 150 personajes desde la API de Rick and Morty.\n\n' +
+            '• Puede tardar 5-10 minutos\n' +
+            '• Se descargarán imágenes\n' +
+            '• Se crearán ubicaciones y episodios\n\n' +
+            '¿Deseas continuar?'
+        );
+        
+        if (confirmed) {
+            // Cambiar el texto del botón
+            const btn = document.getElementById('initBtn');
+            btn.innerHTML = '<span class="loading"></span> Cargando datos';
+            btn.disabled = true;
+        } else {
+            e.preventDefault();
+        }
+    });
+
+    // Auto-cerrar mensajes después de 5 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+    });
+
+    // Animación de salida
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideOut {
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

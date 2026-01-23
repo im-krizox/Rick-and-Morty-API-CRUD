@@ -1,0 +1,271 @@
+{% extends 'rickmorty_app/base.html' %}
+
+{% block title %}Eliminar {{ character.name }} - Rick and Morty{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==================== CONFIRMACIÓN DE ELIMINACIÓN ==================== */
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .delete-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--danger);
+    }
+
+    .delete-header {
+        background: linear-gradient(135deg, var(--danger) 0%, #c62828 100%);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .delete-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .delete-title {
+        font-size: 2rem;
+        color: white;
+        margin: 0;
+    }
+
+    .delete-content {
+        padding: 2rem;
+    }
+
+    .delete-warning {
+        background: rgba(244, 67, 54, 0.1);
+        border-left: 4px solid var(--danger);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .delete-warning-title {
+        color: var(--danger);
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .delete-warning-text {
+        color: var(--light-text);
+        line-height: 1.6;
+    }
+
+    .character-info-delete {
+        background: var(--darker-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .character-image-delete {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1rem;
+        display: block;
+        border: 4px solid var(--danger);
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+
+    .character-name-delete {
+        font-size: 1.8rem;
+        color: var(--light-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .character-details-delete {
+        color: var(--gray-text);
+        font-size: 0.95rem;
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .delete-actions button,
+    .delete-actions a {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-confirm-delete {
+        background-color: var(--danger);
+        color: white;
+    }
+
+    .btn-confirm-delete:hover {
+        background-color: #c62828;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+    }
+
+    .btn-cancel-delete {
+        background-color: var(--hover-bg);
+        color: var(--light-text);
+    }
+
+    .btn-cancel-delete:hover {
+        background-color: var(--card-bg);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .delete-content {
+            padding: 1.5rem;
+        }
+
+        .delete-title {
+            font-size: 1.5rem;
+        }
+
+        .delete-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <!-- Botón volver -->
+    <a href="{% url 'character_detail' character.pk %}" class="btn btn-secondary mb-3" style="display: inline-block;">
+        Volver
+    </a>
+
+    <div class="delete-card">
+        <!-- HEADER -->
+        <div class="delete-header">
+            <div class="delete-icon"></div>
+            <h1 class="delete-title">Confirmar Eliminación</h1>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="delete-content">
+            <!-- ADVERTENCIA -->
+            <div class="delete-warning">
+                <div class="delete-warning-title">
+                    <span></span>
+                    <span>ATENCIÓN</span>
+                </div>
+                <div class="delete-warning-text">
+                    Esta acción es <strong>permanente</strong> y <strong>no se puede deshacer</strong>.<br>
+                    Se eliminará toda la información del personaje y sus relaciones con episodios.
+                </div>
+            </div>
+
+            <!-- INFORMACIÓN DEL PERSONAJE -->
+            <div class="character-info-delete">
+                {% if character.image %}
+                    <img src="{{ character.image.url }}" alt="{{ character.name }}" class="character-image-delete">
+                {% else %}
+                    <div class="character-image-delete" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+                        {{ character.name|first }}
+                    </div>
+                {% endif %}
+                
+                <h2 class="character-name-delete">{{ character.name }}</h2>
+                <div class="character-details-delete">
+                    {% if character.location %}
+                        Ubicación {{ character.location.name }}
+                    {% endif %}
+                    <br>
+                    Episodios: {{ character.episode_count }} episodio{{ character.episode_count|pluralize }}
+                </div>
+            </div>
+
+            <!-- FORMULARIO DE CONFIRMACIÓN -->
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+                
+                <p style="text-align: center; color: var(--light-text); margin-bottom: 1.5rem;">
+                    ¿Estás absolutamente seguro de que deseas eliminar a <strong>{{ character.name }}</strong>?
+                </p>
+
+                <div class="delete-actions">
+                    <button type="submit" class="btn-confirm-delete" id="confirmBtn">
+                        Sí, Eliminar Permanentemente
+                    </button>
+                    <a href="{% url 'character_detail' character.pk %}" class="btn-cancel-delete">
+                        No, Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Doble confirmación antes de eliminar
+    document.getElementById('deleteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const characterName = "{{ character.name|escapejs }}";
+        
+        // Primera confirmación
+        const firstConfirm = confirm(
+            `ÚLTIMA ADVERTENCIA\n\n` +
+            `Estás a punto de eliminar permanentemente a "${characterName}".\n\n` +
+            `¿Estás COMPLETAMENTE seguro?`
+        );
+        
+        if (firstConfirm) {
+            // Segunda confirmación (más estricta)
+            const secondConfirm = confirm(
+                `CONFIRMACIÓN FINAL\n\n` +
+                `Escribe mentalmente "ELIMINAR" para confirmar.\n\n` +
+                `¿Proceder con la eliminación?`
+            );
+            
+            if (secondConfirm) {
+                // Enviar el formulario
+                const btn = document.getElementById('confirmBtn');
+                btn.innerHTML = '<span class="loading"></span> Eliminando';
+                btn.disabled = true;
+                this.submit();
+            }
+        }
+    });
+
+    // Advertencia al intentar salir
+    window.addEventListener('beforeunload', function(e) {
+        // Solo si el botón está deshabilitado (eliminación en proceso)
+        if (document.getElementById('confirmBtn').disabled) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
+{% endblock %}

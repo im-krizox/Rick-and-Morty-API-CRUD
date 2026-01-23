@@ -78,6 +78,17 @@ TEMPLATES = [
     },
 ]
 
+# Configuración de mensajes (para las alertas)
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}
+
 WSGI_APPLICATION = 'rick_and_morty_api_crud.wsgi.application'
 
 

@@ -80,7 +80,7 @@ pip --version
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/su-usuario/Rick-and-Morty-API-CRUD.git
+git clone git@github.com:im-krizox/Rick-and-Morty-API-CRUD.git
 cd Rick-and-Morty-API-CRUD
 ```
 
